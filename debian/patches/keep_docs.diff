@@ -1,0 +1,16 @@
+Index: swig1.3-1.3.38/Doc/Manual/Makefile
+===================================================================
+--- swig1.3-1.3.38.orig/Doc/Manual/Makefile	2009-02-09 19:08:40.293180581 +0100
++++ swig1.3-1.3.38/Doc/Manual/Makefile	2009-02-09 19:13:13.645181233 +0100
+@@ -50,11 +50,7 @@
+ 	cat chapters >> swightml.book
+ 
+ clean: clean-baks
+-	rm -f swightml.book
+-	rm -f swigpdf.book
+ 	rm -f CCache.html
+-	rm -f SWIGDocumentation.html
+-	rm -f SWIGDocumentation.pdf
+ 
+ clean-baks:
+ 	rm -f *.bak

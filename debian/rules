@@ -1,0 +1,161 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses debhelper. GNU copyright 1997 by Joey Hess.
+# This version is for a hypothetical package that builds an
+# architecture-dependant package, as well as an architecture-independent
+# package.
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+
+# Support building from Subversion repository
+export DH_ALWAYS_EXCLUDE=.svn
+
+include /usr/share/quilt/quilt.make
+
+# XXX: patch to pike detection submitted upstream, need to adapt
+# configure args
+MAKEOPTS =
+CONFIGURE_ARGS := \
+	--prefix=/usr --mandir=/usr/share/man	\
+	--with-tclconfig=/usr/lib/tcl8.4		\
+	--with-tclincl=/usr/include/tcl8.4		\
+	--with-python=/usr/bin/python2.5		\
+	--with-ruby=/usr/bin/ruby1.8			\
+	--with-pike=/usr/bin/pike7.6			\
+	--with-pikeincl=/usr/include/pike/7.6.24	\
+	--with-swiglibdir=/usr/share/swig1.3		\
+	--without-mzscheme
+
+DEB_TARGET_ARCH := $(shell dpkg-architecture -qDEB_HOST_ARCH)
+
+with_java := yes
+no_java_archs := hppa hurd-i386 mips mipsel netbsd-i386
+ifneq ($(DEB_TARGET_ARCH),i386)
+  ifeq ($(DEB_TARGET_ARCH), $(findstring $(DEB_TARGET_ARCH),$(no_java_archs)))
+    with_java := disabled for architecure $(DEB_TARGET_ARCH)
+    NO_PACKAGES +=
+  endif
+endif
+
+with_chicken := yes
+no_chicken_archs := m68k mips mipsel
+ifeq ($(DEB_TARGET_ARCH), $(findstring $(DEB_TARGET_ARCH),$(no_chicken_archs)))
+  with_chicken := disabled for architecure $(DEB_TARGET_ARCH)
+  NO_PACKAGES += libswig1.3.22-chicken
+endif
+
+NO_PACKAGES_ARGS = $(foreach p,$(NO_PACKAGES),-N$(p))
+
+ifeq ($(with_java),yes)
+  CONFIGURE_ARGS += \
+	--with-java=/usr/bin/java \
+	--with-javac=/usr/bin/javac
+else
+  CONFIGURE_ARGS += --without-java
+  MAKEOPTS += skip-java=true
+endif
+
+ifeq ($(with_chicken),yes)
+  CONFIGURE_ARGS += \
+	--with-chicken=/usr/bin/chicken \
+	--with-chickencfg=/usr/bin/chicken-config
+else
+  CONFIGURE_ARGS += --without-chicken
+  MAKEOPTS += skip-chicken=true
+endif
+
+configure: configure-stamp
+configure-stamp: $(QUILT_STAMPFN)
+	dh_testdir
+	touch aclocal.m4
+	touch configure
+	touch Source/Makefile.in
+	PHP4INC="`php-config --includes`" \
+	CFLAGS="-g -O2 `perl -e 'use Config; print $$Config{ccflags};'`" \
+	./configure $(CONFIGURE_ARGS)
+	touch configure-stamp
+
+build: build-stamp
+build-stamp: configure-stamp
+	dh_testdir
+	$(MAKE) $(MAKEOPTS)
+	touch build-stamp
+
+clean: patch
+	dh_testdir
+	dh_testroot
+	rm -f configure-stamp build-stamp install-stamp
+	if [ -f Makefile ]; then $(MAKE) $(MAKEOPTS) distclean; fi
+	rm -f config.log config.status
+	rm -f preinst-swig
+	rm -f Source/Include/swigconfig.h Source/Include/stamp-h1
+	rm -f `find -name Makefile.in|sed 's,\.in$$,,'`
+	rm -Rf Source/.deps
+	rm -Rf Lib/swigwarn.swg swig.spec
+	dh_clean
+	debian/rules unpatch
+
+install: install-stamp
+install-stamp: build-stamp
+	dh_testdir
+	dh_testroot
+	dh_clean -k
+	dh_installdirs
+
+	$(MAKE) $(MAKEOPTS) DESTDIR=`pwd`/debian/swig install
+
+	touch install-stamp
+
+# Build architecture-independent files here.
+# We don't need a dependency on build or install since these are the plain
+# documentation files as included in the distribution.
+binary-indep:	
+	dh_testdir
+	dh_testroot
+	dh_clean -i -k
+	dh_installdirs -i
+	dh_installdocs -i
+	dh_installexamples -i
+	cd debian/swig-examples/usr/share/doc/swig-examples && mv examples/* . && rmdir examples
+	cp debian/swig-examples.override debian/swig-examples/usr/share/lintian/overrides/swig-examples
+	perl -pi -e 's,^SWIG.*=.*$$,SWIG      = swig,' \
+		`find debian/swig-examples/usr/share/doc/swig-examples -name Makefile`
+	dh_installchangelogs -i
+	dh_link -i
+	dh_compress -i -X.pdf
+	dh_fixperms -i
+	dh_installdeb -i
+	dh_gencontrol -i
+	dh_md5sums -i
+	dh_builddeb -i
+
+# Build architecture-dependent files here.
+binary-arch: build install
+	dh_testdir
+	dh_testroot
+	dh_installdocs -a $(NO_PACKAGES_ARGS) README NEW
+	dh_installexamples -a $(NO_PACKAGES_ARGS)
+	dh_installmenu -a $(NO_PACKAGES_ARGS)
+#	dh_installemacsen -a $(NO_PACKAGES_ARGS)
+#	dh_installinit -a $(NO_PACKAGES_ARGS)
+	dh_installcron -a $(NO_PACKAGES_ARGS)
+	dh_installman -a debian/swig.1
+#	dh_undocumented
+	dh_installchangelogs -a -Nswig1.3 $(NO_PACKAGES_ARGS) CHANGES
+	dh_installchangelogs -pswig1.3 $(NO_PACKAGES_ARGS)
+	dh_compress -a $(NO_PACKAGES_ARGS) -X.pdf
+	dh_link -a $(NO_PACKAGES_ARGS)
+	dh_strip -a $(NO_PACKAGES_ARGS)
+	dh_fixperms -a $(NO_PACKAGES_ARGS)
+	dh_installdeb -a $(NO_PACKAGES_ARGS)
+	dh_shlibdeps -a $(NO_PACKAGES_ARGS)
+	dh_gencontrol -a $(NO_PACKAGES_ARGS)
+	dh_makeshlibs -a $(NO_PACKAGES_ARGS)
+	dh_md5sums -a $(NO_PACKAGES_ARGS)
+	dh_builddeb -a $(NO_PACKAGES_ARGS)
+
+source diff:
+	@echo >&2 'source and diff are obsolete - use dpkg-source -b'; false
+
+binary: binary-indep binary-arch
+.PHONY: build clean binary-indep binary-arch binary install

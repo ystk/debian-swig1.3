@@ -1,0 +1,83 @@
+Source: swig1.3
+Section: interpreters
+Priority: optional
+Maintainer: Torsten Landschoff <torsten@debian.org>
+Standards-Version: 3.7.3
+Homepage: http://www.swig.org/
+Vcs-Svn: svn://svn.debian.org/svn/pkg-swig/trunk
+Vcs-Browser: http://svn.debian.org/wsvn/pkg-swig/trunk
+Build-Depends: bison,
+               debhelper (>= 7.0),
+               gcj [!hppa !mips !mipsel !alpha !arm !hurd-i386],
+               gij [!hppa !mips !mipsel !alpha !arm !hurd-i386],
+               guile-1.8-dev,
+               libchicken-dev [!m68k !mips !mipsel],
+               libperl-dev,
+               libpcre3-dev [!m68k !mips !mipsel],
+               php5-cgi,
+               php5-dev,
+               python-dev,
+               quilt (>= 0.40),
+               ruby1.8,
+               ruby1.8-dev,
+               tcl8.4-dev,
+               tk8.4-dev
+
+Package: swig
+Architecture: any
+Replaces: swig1.3
+Depends: ${shlibs:Depends}
+Suggests: swig-examples, swig-doc
+Description: Generate scripting interfaces to C/C++ code
+ SWIG is a compiler that makes it easy to integrate C and C++ code
+ with other languages including Perl, PHP, Tcl, Ruby, Python, Java, 
+ Guile, Mzscheme, Chicken, OCaml, Pike, and C#.
+ .
+ Swig takes a set of ANSI C/C++ declarations and generates an 
+ interface for them to your favorite scripting language.
+
+Package: swig1.3
+Architecture: any
+Depends: swig (>= 1.3.0)
+Description: Generate scripting interfaces to C/C++ code
+ SWIG is a compiler that makes it easy to integrate C and C++ code
+ with other languages including Perl, PHP, Tcl, Ruby, Python, Java, 
+ Guile, Mzscheme, Chicken, OCaml, Pike, and C#.
+ .
+ This is just an upgrade convenience package. For the real stuff 
+ look at the swig package.
+
+Package: swig-examples
+Architecture: all
+Depends: swig
+Replaces: swig1.3-examples
+Description: Examples for applications of SWIG
+ Contains examples for applications of SWIG, a wrapper interface
+ generator to integrate C code into scripting languages.
+
+Package: swig1.3-examples
+Architecture: all
+Depends: swig-examples
+Description: Examples for applications of SWIG
+ Contains examples for applications of SWIG. These examples are 
+ for the 1.3 release. 
+ .
+ This is a dependency package for the real swig-examples package.
+
+Package: swig-doc
+Architecture: all
+Section: doc
+Suggests: swig
+Replaces: swig1.3-doc
+Description: HTML documentation for SWIG
+ Contains the users' and developers' manuals for SWIG (Simplified 
+ Wrapper Interface Generator) 1.3 in HTML format.
+
+Package: swig1.3-doc
+Architecture: all
+Section: doc
+Suggests: swig
+Depends: swig-doc
+Description: HTML documentation for SWIG
+ This is just a convenience package to make smooth upgrades possible.
+ The real stuff is in the swig-doc package.
